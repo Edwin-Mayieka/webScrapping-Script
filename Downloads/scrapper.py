@@ -12,11 +12,17 @@ import os
 # Set the path to the Chrome binary
 chrome_options = webdriver.ChromeOptions()
 chrome_options.binary_location = '/usr/bin/chromium'
-
+#chrome_options.binary_location = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+course_url='https://app.schoology.com/course/6699263020/members'
 # excel file name
 current_time = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 filename='scholars_'+ current_time + '.xlsx'
-
+print("Script starting***")
+startPage=input("Enter startPage: ")
+pages=input("Enter the number of pages to go through. ie totalPages/30 : ")
+startPage=int(startPage)
+pages=int(pages)
+print("Now wait***")
 
 # Set up the Chrome driver with the downloaded ChromeDriver executable
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
@@ -39,7 +45,7 @@ driver.execute_script("arguments[0].value = arguments[1];", school_id_field, sch
 # Submit the login form
 driver.find_element(By.ID, 'edit-submit').click()
 driver.implicitly_wait(10)
-driver.get('https://app.schoology.com/course/6667445896/members')
+driver.get(course_url)
 
 emails = []
 phones=[]
@@ -79,7 +85,7 @@ def loadData():
             except NoSuchElementException:
                     phones.append('')
                           
-    driver.get('https://app.schoology.com/course/6667445896/members')
+    driver.get(course_url)
     wait = WebDriverWait(driver, 10)
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.next')))
 
@@ -126,7 +132,10 @@ def print_data_to_excel(names, emails, phones, filename):
     print("Data printed to Excel successfully.")
 
 
-def getData(startPage,pages):
+def getData(startPage=startPage,pages=pages):
+    # print("Script starting***")
+    # startPage=input("Enter startPage: ")
+    # pages=input("Enter the number of pages to go through")
     if startPage==1:
         for page in range(pages):
             if page == 0:
@@ -135,7 +144,7 @@ def getData(startPage,pages):
                 nextPage(page)
                 loadData()
     else:
-        nextPage(startPage)
+        nextPage(startPage-1)
         for page in range(pages):
             if page == 0:
                 loadData()
@@ -149,7 +158,7 @@ def getData(startPage,pages):
 
 # Enter the startPage and the number of pages that you want to go through
 #pages=totalPages/totalItems-per-page ie for 600pages and 30 items per page = 600/30= 20 pages
-getData(1,1)
+getData()
 
 
 
