@@ -42,8 +42,7 @@ contact_info={}
 emails = []
 phone_number=[]
 # Find the table rows (excluding the table header)
-def loadData(clicks):
-    clicks=clicks
+def loadData():
     wait = WebDriverWait(driver, 10)
     table = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'table[role="presentation"]')))
     ids=[]
@@ -64,42 +63,39 @@ def loadData(clicks):
                 email_element = driver.find_element(By.CSS_SELECTOR, 'a.sExtlink-processed.mailto')
                 email = email_element.get_attribute('href').replace('mailto:', '')
                 emails.append(email)
-                contact_info.update({email:'phone'})
+                # phone_element = driver.find_element(By.XPATH, "//td/a[@class='sExtlink-processed']")
+                # phone = phone_element.get_attribute('href').replace('tel:', '')
+                contact_info.update({email:""})
             except NoSuchElementException:
                 if email:
                     contact_info.update({email:''})
                     
-                else:
-                    continue
+                else: continue
+
     driver.get('https://app.schoology.com/course/6667445896/members')
     wait = WebDriverWait(driver, 10)
-
-    def is_page_stale(driver):
-        try:
-        # Check if the current page has become stale
-            driver.refresh()
-            return False
-        except:
-        # If any exception occurs, assume the page is stale
-            return True
-
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.next')))
-    next_page = driver.find_element(By.CSS_SELECTOR, "div.next")
-    clicks = clicks
 
-    for click in range(clicks):
-        next_page.click()
-        print(f"clicked {click+1} times")
+def nextPage(pages):
+    wait = WebDriverWait(driver, 10)
 
-    # Wait for the page to become stale (indicating a new page has been loaded)
-        wait.until(lambda driver: is_page_stale(driver))
+    # Add initial wait for the page to load completely
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.next')))
 
-    # Wait for the new "next page" element to be present before proceeding
+    for page in range(pages):
+        # Wait for the current page to become stale (indicating a new page has loaded)
+        next_page = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.next')))
+        if next_page:
+            next_page.click()
+            print(f"Clicked {page+1} times")
+
+            # Delay for 5 seconds to allow the page to load
+            time.sleep(5)
+
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.next')))
-        next_page = driver.find_element(By.CSS_SELECTOR, "div.next")
-
-    
 def print_dict_to_excel(dictionary, filename):
+   
+   
     # Create a new workbook and select the active sheet
     current_dir = os.getcwd()
     file_path = os.path.join(current_dir, filename)
@@ -117,19 +113,20 @@ def print_dict_to_excel(dictionary, filename):
     workbook.save(file_path)
     print("Data printed to Excel successfully.") 
 
-def updatePage(pages):
-    for i in range(pages):
-        clicks=i+1
-        loadData(clicks)
-        print(i)         
-# Print the list of email addresses
+def getData(startPage,pages):
+    for page in range(pages):
+        if page == 0:
+            loadData()
+        else:
+            nextPage(page)
+            loadData()
+
+# the file name to use
 current_time = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 filename='contact_info_'+ current_time + '.xlsx'
-# loadData()
-# print(contact_info)
 
-updatePage(3)
+getData(3)
 print_dict_to_excel(contact_info, filename=filename)
 
-# Close the browser
+
 driver.quit()
