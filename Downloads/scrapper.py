@@ -18,9 +18,9 @@ course_url='https://app.schoology.com/course/6699263020/members'
 current_time = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 filename='scholars_'+ current_time + '.xlsx'
 print("Script starting***")
-startPage=input("Enter startPage: ")
+pageToStart=input("Enter startPage: ")
 pages=input("Enter the number of pages to go through. ie totalPages/30 : ")
-startPage=int(startPage)
+pageToStart=int(pageToStart)
 pages=int(pages)
 print("Now wait***")
 
@@ -80,17 +80,39 @@ def loadData():
                    
             try:
                 phone_element = driver.find_element(By.XPATH, "//td/a[@class='sExtlink-processed']")
-                phone = phone_element.get_attribute('href').replace('tel:', '')
-                phones.append(phone)
+                if phone_element is not None:
+                    phone = phone_element.get_attribute('href').replace('tel:', '')
+                    phones.append(phone)
+  
+                else:
+                    phone = ''
+                    phones.append(phone)  
             except NoSuchElementException:
                     phones.append('')
                           
     driver.get(course_url)
-    wait = WebDriverWait(driver, 10)
+    time.sleep(5)
+    wait = WebDriverWait(driver, 5)
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.next')))
+def startPageNav(startPage):
+    wait = WebDriverWait(driver, 5)
 
+    # Add initial wait for the page to load completely
+    try:
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.next')))
+        for page in range(startPage-1):
+            next_page = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.next')))
+            if next_page:
+                next_page.click()
+                print(f"Clicked next. Now on page: startPage+page")
+            # Delay for 5 seconds to allow the page to load
+                time.sleep(5)
+                wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.next')))
+    except:
+        print("No more pages")
+       
 def nextPage(pages):
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, 7)
 
     # Add initial wait for the page to load completely
     try:
@@ -99,7 +121,7 @@ def nextPage(pages):
             next_page = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.next')))
             if next_page:
                 next_page.click()
-                print(f"Clicked {page+1} times")
+                print(f"Clicked next. Now on page: startPage+page")
 
             # Delay for 5 seconds to allow the page to load
                 time.sleep(5)
@@ -132,25 +154,25 @@ def print_data_to_excel(names, emails, phones, filename):
     print("Data printed to Excel successfully.")
 
 
-def getData(startPage=startPage,pages=pages):
-    # print("Script starting***")
-    # startPage=input("Enter startPage: ")
-    # pages=input("Enter the number of pages to go through")
+def getData(startPage=pageToStart,pages=pages):
     if startPage==1:
         for page in range(pages):
             if page == 0:
-                loadData()
+                 print(f"startPage: {startPage}")
+                # loadData()
             else:
                 nextPage(page)
-                loadData()
+                # loadData()
     else:
-        nextPage(startPage-1)
+        startPageNav(startPage)
+        print(f"startPage> {startPage}")
         for page in range(pages):
             if page == 0:
-                loadData()
+                # loadData()
+                print() 
             else:
                 nextPage(page)
-                loadData()
+                # loadData()
     print_data_to_excel(names,emails,phones,filename=filename)
     # Quit
     driver.quit()
